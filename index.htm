@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>University of Waterloo Pokestops</title>
+    <link rel="stylesheet" href="css/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="js/leaflet.js"></script>
+    <script>
+        var dataset;
+        var request = new XMLHttpRequest();
+        request.open('GET', 'https://karlding.github.io/uw-pokestops/api/pokestops.json', true);
+
+        request.onload = function() {
+          if (request.status >= 200 && request.status < 400) {
+            dataset = JSON.parse(request.responseText);
+
+            var map = L.map('map', {
+                center: [43.4707691,-80.5454872],
+                zoom: 16
+            });
+
+            var basemap = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+                minZoom: 3,
+                maxZoom: 25,
+                continuousWorld: false,
+                noWrap: true,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://cartodb.com/attributions">CartoDB</a>'
+            });
+            map.addLayer(basemap);
+
+            var markerStyles = {
+                radius: 6,
+                fillColor: '#ff5a5f', fillOpacity: 0.5,
+                color: '#333b3f', opacity: 0.7, weight: 1
+            };
+
+            var overlayOptions = {
+                onEachFeature: function (feature, layer) {
+                    layer.bindPopup(feature.properties.title + '<br />' + feature.geometry.coordinates[1] + ',' + feature.geometry.coordinates[0]);
+                    layer.on('click', function (e) {this.openPopup();});
+                },
+                pointToLayer: function (feature, latlng) {
+                    return L.circleMarker(latlng, markerStyles);
+                }
+            };
+
+            var pointsLayer = L.geoJson(dataset, overlayOptions);
+            map.addLayer(pointsLayer);
+          } else {
+            // yolo who needs error handling
+          }
+        };
+
+        request.onerror = function() {
+          // yolo swaggins
+        };
+
+        request.send();
+    </script>
+</head>
+<body>
+    <div id="map"></div>
+</body>
+</html>
